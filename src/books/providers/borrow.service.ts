@@ -3,6 +3,7 @@ import {
   NotFoundException,
   Logger,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { BorrowRepository } from '../repositories/borrow.repository';
 import { BookRepository } from '../repositories/book.repository';
@@ -50,39 +51,55 @@ export class BorrowService {
       available: isAvailable,
     });
 
-    return this.borrowRepository.create(createBorrowDto);
+    const borrow = {
+      ...createBorrowDto,
+      status: 'borrowed',
+    };
+
+    return this.borrowRepository.create(borrow);
   }
 
-  async returnBook(borrowId: string): Promise<Borrow> {
-    const borrow = await this.borrowRepository.findById(borrowId);
-    if (!borrow) {
-      throw new NotFoundException(
-        `Borrow record with ID ${borrowId} not found`,
-      );
+  async returnBook(borrowId: string, userId: string): Promise<Borrow> {
+    try {
+      const borrow = await this.borrowRepository.findById(borrowId, userId);
+      if (!borrow) {
+        throw new NotFoundException(
+          `Borrow record with ID ${borrowId} not found`,
+        );
+      }
+
+      if (borrow.status === 'returned') {
+        throw new BadRequestException(
+          `Borrow record with ID ${borrowId} has already been returned`,
+        );
+      }
+
+      await Promise.all([
+        this.bookRepository.updateAvailability(borrow.bookId, true),
+        this.borrowRepository.update(borrowId, userId, {
+          returnDate: new Date().toISOString(),
+        }),
+      ]);
+
+      const returnedBorrow: Borrow = {
+        ...borrow,
+        status: 'returned',
+        returnDate: new Date().toISOString(),
+      };
+
+      return returnedBorrow;
+    } catch (error) {
+      this.logger.error(`Error returning book: ${error.message}`);
+      throw error;
     }
-
-    if (borrow.status === 'returned') {
-      throw new Error(
-        `Borrow record with ID ${borrowId} has already been returned`,
-      );
-    }
-
-    // Mark the book as available
-    await this.bookRepository.updateAvailability(borrow.bookId, true);
-
-    // Update the borrow record to returned
-    return this.borrowRepository.update(borrowId, {
-      status: 'returned',
-      returnDate: new Date().toISOString(),
-    });
   }
 
   async findAllBorrows(): Promise<Borrow[]> {
     return this.borrowRepository.findAll();
   }
 
-  async findBorrowById(id: string): Promise<Borrow> {
-    const borrow = await this.borrowRepository.findById(id);
+  async findBorrowById(id: string, userId: string): Promise<Borrow> {
+    const borrow = await this.borrowRepository.findById(id, userId);
     if (!borrow) {
       throw new NotFoundException(`Borrow record with ID ${id} not found`);
     }

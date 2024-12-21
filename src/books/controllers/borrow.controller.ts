@@ -18,6 +18,8 @@ import {
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { CognitoAuthGuard } from '../../auth/guards/cognito-auth.guard';
 import { CognitoRolesGuard } from '../../auth/guards/cognito-roles.guard';
+import { User } from '../../auth/decorators/user.decorator';
+import { CognitoUser } from '../../auth/types/cognito-user.type';
 
 @ApiTags('Books - Borrow')
 @Controller('borrows')
@@ -42,8 +44,8 @@ export class BorrowController {
   @ApiOperation({ summary: 'Return a book' })
   @ApiResponse({ status: 200, description: 'Book returned successfully' })
   @ApiResponse({ status: 404, description: 'Borrow record not found' })
-  async returnBook(@Param('id') borrowId: string) {
-    return this.borrowService.returnBook(borrowId);
+  async returnBook(@Param('id') borrowId: string, @User() user: CognitoUser) {
+    return this.borrowService.returnBook(borrowId, user.sub);
   }
 
   @Get()
@@ -59,7 +61,7 @@ export class BorrowController {
   @ApiOperation({ summary: 'Get borrow record by ID' })
   @ApiResponse({ status: 200, description: 'Borrow record details' })
   @ApiResponse({ status: 404, description: 'Borrow record not found' })
-  async findBorrowById(@Param('id') id: string) {
-    return this.borrowService.findBorrowById(id);
+  async findBorrowById(@Param('id') id: string, @User() user: CognitoUser) {
+    return this.borrowService.findBorrowById(id, user.sub);
   }
 }

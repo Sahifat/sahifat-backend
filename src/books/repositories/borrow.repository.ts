@@ -3,6 +3,7 @@ import { DynamoDBService } from '../../database/dynamodb.service';
 import { Borrow } from '../types/borrow.types';
 import { CreateBorrowDto } from '../dtos/create-borrow.dto';
 import { v4 as uuidv4 } from 'uuid';
+import { UpdateBorrowDto } from '../dtos/update-borrow.dto';
 
 @Injectable()
 export class BorrowRepository {
@@ -20,9 +21,14 @@ export class BorrowRepository {
     return items as Borrow[];
   }
 
-  async findById(id: string): Promise<Borrow | null> {
-    const item = await this.dynamoDBService.get(this.tableName, { id });
-    return item as Borrow | null;
+  async findById(borrowId: string, userId: string): Promise<Borrow | null> {
+    const key = {
+      id: borrowId,
+      userId: userId,
+    };
+
+    const result = await this.dynamoDBService.get('Borrows', key);
+    return result as Borrow | null;
   }
 
   async findActiveBorrowByBookAndUser(
@@ -58,22 +64,28 @@ export class BorrowRepository {
     return borrow;
   }
 
-  async update(id: string, updateBorrowDto: Partial<Borrow>): Promise<Borrow> {
-    const existingBorrow = await this.findById(id);
+  async update(
+    id: string,
+    userId: string,
+    updateBorrowDto: UpdateBorrowDto,
+  ): Promise<Borrow> {
+    const existingBorrow = await this.findById(id, userId);
     if (!existingBorrow) {
-      throw new NotFoundException(`Borrow with ID ${id} not found`);
+      throw new NotFoundException(
+        `Borrow with ID ${id} and userId ${userId} not found`,
+      );
     }
 
-    const updateData = {
-      ...existingBorrow,
-      ...updateBorrowDto,
+    const key = {
+      id: id,
+      userId: userId,
     };
 
-    const response = await this.dynamoDBService.update(
-      this.tableName,
-      { id },
-      updateData,
-    );
+    const response = await this.dynamoDBService.update(this.tableName, key, {
+      status: 'returned',
+      returnDate: new Date().toISOString(),
+      ...updateBorrowDto,
+    });
     return response as Borrow;
   }
 
