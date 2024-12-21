@@ -23,14 +23,6 @@ export class CognitoAuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const token = this.extractToken(request);
 
-    if (!token) {
-      throw new UnauthorizedException('Custom message: No token provided');
-    }
-
-    if (token.split('.').length !== 3) {
-      throw new UnauthorizedException('do not have permission');
-    }
-
     try {
       const payload = await this.cognitoVerifier.verify(token);
       request.user = {
@@ -40,7 +32,7 @@ export class CognitoAuthGuard implements CanActivate {
       };
       return true;
     } catch {
-      throw new UnauthorizedException(`Custom message: Invalid token`);
+      throw new UnauthorizedException('Invalid token');
     }
   }
 
