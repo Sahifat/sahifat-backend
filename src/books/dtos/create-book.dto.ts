@@ -8,7 +8,7 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateBookDto {
-  @ApiProperty({ description: 'Book title' })
+  @ApiProperty({ description: 'Book title must be unique' })
   @IsString()
   @IsNotEmpty()
   title: string;
@@ -18,7 +18,7 @@ export class CreateBookDto {
   @IsNotEmpty()
   author: string;
 
-  @ApiProperty({ description: 'Book ISBN' })
+  @ApiProperty({ description: 'Book ISBN must be unique' })
   @IsString()
   @IsNotEmpty()
   isbn: string;
