@@ -8,6 +8,7 @@ import { DynamoDBService } from '../../database/dynamodb.service';
 import { Book } from '../types/book.types';
 import { CreateBookDto } from '../dtos/create-book.dto';
 import { v4 as uuidv4 } from 'uuid';
+import { SearchBookDto } from '../dtos/search-book.dto';
 
 @Injectable()
 export class BookRepository {
@@ -131,5 +132,50 @@ export class BookRepository {
 
   async remove(id: string): Promise<void> {
     await this.dynamoDBService.delete(this.tableName, { id });
+  }
+
+  async searchBooks(searchBookDto: SearchBookDto): Promise<Book[]> {
+    let filterExpression = '';
+    const expressionAttributeValues = {};
+    const expressionAttributeNames = {};
+
+    const conditions: string[] = [];
+
+    if (searchBookDto.title) {
+      conditions.push('contains(#title, :title)');
+      expressionAttributeValues[':title'] = searchBookDto.title;
+      expressionAttributeNames['#title'] = 'title';
+    }
+
+    if (searchBookDto.author) {
+      conditions.push('contains(#author, :author)');
+      expressionAttributeValues[':author'] = searchBookDto.author;
+      expressionAttributeNames['#author'] = 'author';
+    }
+
+    if (searchBookDto.categoryId) {
+      conditions.push('#categoryId = :categoryId');
+      expressionAttributeValues[':categoryId'] = searchBookDto.categoryId;
+      expressionAttributeNames['#categoryId'] = 'categoryId';
+    }
+
+    if (conditions.length > 0) {
+      filterExpression = `(${conditions.join(' AND ')})`;
+    }
+
+    const params = {
+      TableName: this.tableName,
+      FilterExpression: filterExpression || undefined,
+      ExpressionAttributeValues:
+        Object.keys(expressionAttributeValues).length > 0
+          ? expressionAttributeValues
+          : undefined,
+      ExpressionAttributeNames:
+        Object.keys(expressionAttributeNames).length > 0
+          ? expressionAttributeNames
+          : undefined,
+    };
+    const items = await this.dynamoDBService.scan(params);
+    return items as Book[];
   }
 }

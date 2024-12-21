@@ -8,6 +8,7 @@ import {
   Param,
   HttpStatus,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { BookService } from '../providers/book.service';
 import { CreateBookDto } from '../dtos/create-book.dto';
@@ -21,6 +22,7 @@ import {
 import { CognitoAuthGuard } from '../../auth/guards/cognito-auth.guard';
 import { CognitoRolesGuard } from '../../auth/guards/cognito-roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
+import { SearchBookDto } from '../dtos/search-book.dto';
 
 @ApiTags('Books')
 @Controller('books')
@@ -28,6 +30,14 @@ import { Roles } from '../../auth/decorators/roles.decorator';
 @ApiBearerAuth()
 export class BookController {
   constructor(private readonly bookService: BookService) {}
+
+  @Get('search')
+  @Roles('admin', 'client')
+  @ApiOperation({ summary: 'Search books by title, author, or category' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'List of matching books' })
+  async searchBooks(@Query() searchBookDto: SearchBookDto) {
+    return this.bookService.searchBooks(searchBookDto);
+  }
 
   @Get()
   @Roles('admin', 'client')
