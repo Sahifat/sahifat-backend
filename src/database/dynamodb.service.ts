@@ -74,9 +74,11 @@ export class DynamoDBService implements OnModuleInit {
       });
 
       // Always update the updatedAt timestamp
-      updateExpressions.push('#updatedAt = :updatedAt');
-      expressionAttributeNames['#updatedAt'] = 'updatedAt';
-      expressionAttributeValues[':updatedAt'] = new Date().toISOString();
+      if (!updateFields.hasOwnProperty('updatedAt')) {
+        updateExpressions.push('#updatedAt = :updatedAt');
+        expressionAttributeNames['#updatedAt'] = 'updatedAt';
+        expressionAttributeValues[':updatedAt'] = new Date().toISOString();
+      }
 
       const params = {
         TableName: tableName,
