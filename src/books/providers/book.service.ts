@@ -3,6 +3,7 @@ import { BookRepository } from '../repositories/book.repository';
 import { CreateBookDto } from '../dtos/create-book.dto';
 import { UpdateBookDto } from '../dtos/update-book.dto';
 import { Book } from '../types/book.types';
+import { SearchBookDto } from '../dtos/search-book.dto';
 
 @Injectable()
 export class BookService {
@@ -36,5 +37,17 @@ export class BookService {
 
   async updateAvailability(id: string, available: boolean): Promise<Book> {
     return this.bookRepository.update(id, { available });
+  }
+
+  async searchBooks(searchBookDto: SearchBookDto): Promise<Book[]> {
+    try {
+      this.logger.log(
+        `Searching books with params: ${JSON.stringify(searchBookDto)}`,
+      );
+      return await this.bookRepository.searchBooks(searchBookDto);
+    } catch (error) {
+      this.logger.error(`Error searching books: ${error.message}`);
+      throw error;
+    }
   }
 }
