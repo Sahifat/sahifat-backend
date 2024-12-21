@@ -1,10 +1,23 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { ConfigModule } from '@nestjs/config';
+import { BooksModule } from './books/books.module';
+import { AuthModule } from './auth/auth.module';
+import { DatabaseModule } from './database/dynamodb.module';
+import { CustomUnauthorizedExceptionFilter } from './filters/custom-unauthorized-exception.filter';
+import { APP_FILTER } from '@nestjs/core';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    DatabaseModule,
+    BooksModule,
+    AuthModule,
+  ],
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: CustomUnauthorizedExceptionFilter,
+    },
+  ],
 })
 export class AppModule {}
