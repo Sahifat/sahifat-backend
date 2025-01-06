@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/dynamodb.module';
 import { CustomUnauthorizedExceptionFilter } from './filters/custom-unauthorized-exception.filter';
 import { APP_FILTER } from '@nestjs/core';
+import { CategoriesModule } from './categories/categories.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { APP_FILTER } from '@nestjs/core';
     DatabaseModule,
     BooksModule,
     AuthModule,
+    CategoriesModule,
   ],
   providers: [
     {

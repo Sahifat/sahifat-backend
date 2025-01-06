@@ -26,8 +26,8 @@ import { SearchBookDto } from '../dtos/search-book.dto';
 
 @ApiTags('Books')
 @Controller('books')
-@UseGuards(CognitoAuthGuard, CognitoRolesGuard)
-@ApiBearerAuth()
+// @UseGuards(CognitoAuthGuard, CognitoRolesGuard)
+// @ApiBearerAuth()
 export class BookController {
   constructor(private readonly bookService: BookService) {}
 
@@ -40,7 +40,7 @@ export class BookController {
   }
 
   @Get()
-  @Roles('admin', 'client')
+  // @Roles('admin', 'client')
   @ApiOperation({ summary: 'Get all books' })
   @ApiResponse({ status: HttpStatus.OK, description: 'List of all books' })
   async findAll() {
@@ -57,16 +57,16 @@ export class BookController {
   }
 
   @Post()
-  @Roles('admin')
-  @ApiOperation({ summary: 'Create new book (Admin only)' })
-  @ApiResponse({
-    status: HttpStatus.CREATED,
-    description: 'Book created successfully',
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized - Admin access required',
-  })
+  // @Roles('admin')
+  // @ApiOperation({ summary: 'Create new book (Admin only)' })
+  // @ApiResponse({
+  //   status: HttpStatus.CREATED,
+  //   description: 'Book created successfully',
+  // })
+  // @ApiResponse({
+  //   status: HttpStatus.UNAUTHORIZED,
+  //   description: 'Unauthorized - Admin access required',
+  // })
   async create(@Body() createBookDto: CreateBookDto) {
     return this.bookService.create(createBookDto);
   }
